@@ -55,8 +55,5 @@ function normalizeResult(result) {
   return { rootQueryObject, denestedObjects };
 }
 
-const { rootQueryObject, denestedObjects } = normalizeResult(data3.data);
-console.log(util.inspect(denestedObjects, { depth: null }));
-console.log(util.inspect(rootQueryObject, { depth: null }));
-// console.log('ROOT: ', rootQueryObject);
-// denestedObjects.forEach((o) => console.log('DENESTED OBJECT: ', o));
+const res = normalizeResult(data3.data);
+console.log(util.inspect(res, { depth: null }));
