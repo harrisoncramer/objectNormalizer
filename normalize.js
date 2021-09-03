@@ -8,14 +8,16 @@ function normalizeResult(result) {
   /* If top level result is an array, denest every object in it.
    * If it's an object, start denesting immediately.
    */
-  for (key in result) {
+  for (const key in result) {
     rootQueryObject[key] = `loql__${key}`;
-    if (Array.isArray(result[key])) {
-      for (val of result[key]) {
-        flattenAndWrite({ data: val, parentKey: key });
-      }
+    const value = result[key];
+    if (Array.isArray(value)) {
+      rootQueryObject[key] = value.map((subArrayVal, i) => {
+        const uniqueKey = key + '_' + subArrayVal.id; // Add id...
+        return flattenAndWrite({ object: subArrayVal, parentKey: uniqueKey });
+      });
     } else {
-      flattenAndWrite({ data: result[key], parentKey: key });
+      flattenAndWrite({ object: result[key], parentKey: key });
     }
   }
 
@@ -25,23 +27,26 @@ function normalizeResult(result) {
    * primitive, write to result. If object, set to result of recursive call.
    * If array, set to mapped value of array.
    */
-  function flattenAndWrite({ data, parentKey }) {
+  function flattenAndWrite({ object, parentKey }) {
     const result = {};
-    for (key in data) {
-      const value = data[key];
+    for (const key in object) {
+      const value = object[key];
       if (Array.isArray(value)) {
         let childKey = parentKey + '_' + key;
         result[key] = value.map((subArrayVal) => {
           if (typeof subArrayVal === 'object' && subArrayVal !== null) {
             if (!subArrayVal.id) return subArrayVal;
             const uniqueKey = childKey + '_' + subArrayVal.id; // Add id...
-            return flattenAndWrite({ data: subArrayVal, parentKey: uniqueKey });
+            return flattenAndWrite({
+              object: subArrayVal,
+              parentKey: uniqueKey,
+            });
           }
           return subArrayVal;
         });
       } else if (typeof value === 'object' && value !== null) {
         let childKey = parentKey + '_' + key;
-        result[key] = flattenAndWrite({ data: value, parentKey: childKey });
+        result[key] = flattenAndWrite({ object: value, parentKey: childKey });
       } else {
         result[key] = value;
       }
@@ -55,5 +60,5 @@ function normalizeResult(result) {
   return { rootQueryObject, denestedObjects };
 }
 
-const res = normalizeResult(data3.data);
+const res = normalizeResult(data2.data);
 console.log(util.inspect(res, { depth: null }));
