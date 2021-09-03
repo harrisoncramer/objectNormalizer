@@ -3,25 +3,11 @@ const { data, data2, data3, data4 } = require('./data');
 
 /* Top level function required to provide rootQueryObject and denestedObjects
  * through closure to flatObjAndWrite and flattenArray.
+ * These functions are defined inside of normalize to get access to these objects.
  */
 function normalize(input) {
   const rootQueryObject = {};
   const denestedObjects = [];
-
-  /* If top level result is an array, denest every object in it.
-   * If it's an object, start denesting immediately.
-   */
-  function flatten(input) {
-    for (const key in input) {
-      rootQueryObject[key] = `loql__${key}`;
-      const value = input[key];
-      if (Array.isArray(value)) {
-        rootQueryObject[key] = flattenArray({ value, childKey: key });
-      } else {
-        flatObjAndWrite({ object: input[key], parentKey: key });
-      }
-    }
-  }
 
   /*
    * Takes an object, and a parent key. Recursively goes through keys
@@ -67,10 +53,18 @@ function normalize(input) {
     });
   }
 
-  /* Invoke normalizeResult function
-   * in order to build the results.
+  /* Begin the parsing logic. If top level result is an array, denest every object in it.
+   * If it's an object, start denesting immediately.
    */
-  flatten(input);
+  for (const key in input) {
+    rootQueryObject[key] = `loql__${key}`;
+    const value = input[key];
+    if (Array.isArray(value)) {
+      rootQueryObject[key] = flattenArray({ value, childKey: key });
+    } else {
+      flatObjAndWrite({ object: input[key], parentKey: key });
+    }
+  }
 
   return { rootQueryObject, denestedObjects };
 }
